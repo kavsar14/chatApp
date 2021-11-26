@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">ChatApp</string>
+    <string name="default_notification_channel_id">150</string>
+    <string name="facebook_app_id">314075403674033</string>
+    <string name="fb_login_protocol_scheme">fb314075403674033</string>
+</resources>
