@@ -3,6 +3,7 @@ import { GiftedChat } from 'react-native-gifted-chat'
 import { usePubNub } from "pubnub-react";
 import { useDispatch, useSelector } from 'react-redux';
 import _ from 'lodash';
+import firestore from '@react-native-firebase/firestore';
 
 import { CommonAction } from '../../state/ducks/common';
 import setHeaderLeft from '../../utils/setHeaderLeft';
@@ -11,6 +12,7 @@ import { images } from '../../assets/appImages';
 import { isIOS } from '../../utils/globals';
 import { toastMessages } from '../../utils/toastMessage';
 import { PubnubAction } from '../../state/ducks/pubnub';
+import { getFilteredChannelDocId } from '../../pubnub/services';
  
 const Chat = ({route, navigation}) => {
     const pubnub = usePubNub();
@@ -23,9 +25,12 @@ const Chat = ({route, navigation}) => {
 
     const channelId = _.get(route, 'params.channelId', '');
     const username = `${_.get(route, 'params.firstname', '')} ${_.get(route, 'params.lastname', '')}`;
+    const chatChannels = _.get(route, 'params.chatChannel', []);
+    const oppositeId = _.get(route, 'params.oppositeId', '');
 
     const [messages, setMessages] = useState([]);
     const [loginUser, setLoginUser] = useState({});
+    const [channelDocId, setChannelDocId] = useState('');
 
     useEffect(() => {
        getUserData();
@@ -136,14 +141,18 @@ const Chat = ({route, navigation}) => {
     const getUserData = () => {
         const _id = userDetails.uid;
         const name = `${_.get(userDetails, 'firstname', '')} ${_.get(userDetails, 'lastname', '')}`;
+        let channelDocId = getFilteredChannelDocId(oppositeId, _id, chatChannels);
         const userData = {
             _id,
             name,
             image: ''
         }
         setLoginUser(userData);
+        setChannelDocId(channelDocId);
         getAllMesssageHistory();  
      }
+
+     console.log("doc id ", channelDocId);
 
     const getEnvironment = () => {
         const environment = "development"; // production
@@ -218,9 +227,24 @@ const Chat = ({route, navigation}) => {
             channel: spaceId,
             message
         }, (status, response) => {
+            console.log("message plis ",message);
             console.log("Publish ===>", status, response)
+            updateChatChannelLastMessage(message);
         });
     };
+
+    const updateChatChannelLastMessage = (message) => {
+        firestore().collection("chatChannels").doc(channelDocId).update({
+            lastMessage : {
+                text: message.text,
+                date: new Date(message.date)
+            }
+        }).then(()=>{
+            console.log("success");
+        }).catch((error)=>{
+            console.log("error ",error);
+        });
+    }
 
     return (
         <GiftedChat

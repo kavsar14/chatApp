@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
     message: {
         fontSize: 16,  
         color: color.GREY,
-        fontWeight: '200',
+        fontWeight: '400',
         width: '80%'  
     },
     imageTitle: {

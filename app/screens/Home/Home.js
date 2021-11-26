@@ -10,6 +10,8 @@ import {
  import { useDispatch, useSelector } from 'react-redux';
  import _ from 'lodash';
  import { useIsFocused } from '@react-navigation/native';
+ import { usePubNub } from 'pubnub-react';
+ import moment from 'moment';
 
 import ChatView from '../../components/ChatView/ChatView';
 import HeaderTitle from '../../components/HeaderTitle';
@@ -19,7 +21,8 @@ import { CommonAction } from '../../state/ducks/common';
 import { color } from '../../utils/color';
 import { messages, toastMessages } from '../../utils/toastMessage';
 import { AuthAction } from '../../state/ducks/auth';
-import { usePubNub } from 'pubnub-react';
+import { getChannelLastMessage, getFilteredChannelId } from '../../pubnub/services';
+import { getDateInFormat } from '../../utils/globals';
  
 const Home = ({navigation}) => {
   const [userData, setUserData] = useState([]);
@@ -65,9 +68,20 @@ const Home = ({navigation}) => {
           let data = [];
           querySnapshot.forEach(documentSnapshot => {
             if(documentSnapshot.data().uid != user.uid) {
+                let channelId = getFilteredChannelId(documentSnapshot.data().uid, user.uid, chatChannel);
+                let lastMessage = getChannelLastMessage(documentSnapshot.data().uid, user.uid, chatChannel);
+                let message = lastMessage?.text;
+                let date = lastMessage?.date && lastMessage?.date?.toDate();
+                console.log("lastmessage date ", lastMessage);
+
                 data = [
                   ...data,
-                  documentSnapshot.data()
+                  {
+                    ...documentSnapshot.data(),
+                    message,
+                    date,
+                    channelId
+                  }
                 ]
             } else {
               dispatch(AuthAction.setUserData(documentSnapshot.data()));
@@ -83,28 +97,19 @@ const Home = ({navigation}) => {
       const lastname = _.get(item, 'lastname', '');
       const uid = _.get(item, 'uid', '');
       const email = _.get(item, 'email', '');
-      let message = '';
-      let date = undefined;
-      let channelId = filterdata(uid);
-      getMesssageHistory(channelId, (response)=>{
-        if(response) {
-          console.log("response ",response.message.text);
-          message = response.message.text;
-          date = new Date(response.message.date);
-        } 
-      });
-      console.log("message of ", email, message);
-      //setUid(uid)
-      //const channelId = _.get(item, 'channelId', '');
-
-      //console.log("chnnel ",channelId);
-
+      const message = _.get(item, 'message', '');
+      const date = _.get(item, 'date', '');
+      let formattedDate = date ? getDateInFormat(date, 'ddd HH:mm') : '';
+       
+      console.log("date wrap ", date);
+      console.log("time last wrap ", formattedDate);
+       
       return (
         <ChatView 
         firstname={firstname}
         lastname={lastname}
-        message={''}
-        time={''}
+        message={message}
+        time={formattedDate}
         count={0}
         email={email}
         onPress={()=> checkChannels(uid, firstname, lastname)}
@@ -112,9 +117,9 @@ const Home = ({navigation}) => {
       )
    }
 
-   const getMesssageHistory = (channelId, callBack) => {
+   const getMesssageHistory = async (channelId, callBack) => {
         dispatch(CommonAction.startLoading());
-        pubnub.fetchMessages({
+        await pubnub.fetchMessages({
             channels: [`${channelId}`],
             count: 1
         },
@@ -122,9 +127,9 @@ const Home = ({navigation}) => {
         dispatch(CommonAction.stopLoading());
             const obj = _.get(response, `channels[${channelId}]`, []);
             if (obj.length) {
-              callBack(obj[0]);
+             return obj[0];
             } else {
-              callBack('');
+              return '';
             }
         });
    }
@@ -140,8 +145,13 @@ const Home = ({navigation}) => {
         .then(querySnapshot => {
             const tempdata = [];
             querySnapshot.forEach(documentSnapshot => {
+              
               let temp = documentSnapshot.data();
-              tempdata.push(temp)
+              console.log("snap id ", documentSnapshot.id);
+              tempdata.push({
+                ...temp,
+                id: documentSnapshot.id
+              })
               // if((temp.userIdOne == userId && temp.userIdTwo == oppositeId) || 
               // (temp.userIdOne == oppositeId && temp.userIdTwo == userId)) {
               //     channelId = temp.channelId;
@@ -193,7 +203,7 @@ const Home = ({navigation}) => {
             });
 
             if(channelId) {
-              navigateToChat(firstname, lastname, channelId);
+              navigateToChat(firstname, lastname, channelId, oppositeId);
             } else {
               createChannel(firstname, lastname, userId, oppositeId);
             }
@@ -208,7 +218,7 @@ const Home = ({navigation}) => {
           userIdTwo: oppositeId,
           channelId: channelName
       }).then(()=>{
-          navigateToChat(firstname, lastname, channelName);
+          navigateToChat(firstname, lastname, channelName, oppositeId);
       }).catch(()=>{
         const data = { success: false, message: toastMessages.NETWORK_ERROR};
         dispatch(CommonAction.showToast(data));
@@ -216,13 +226,15 @@ const Home = ({navigation}) => {
       });
    }
 
-   const navigateToChat = (firstname, lastname, channelId) => {
+   const navigateToChat = (firstname, lastname, channelId, oppositeId) => {
       dispatch(CommonAction.stopLoading());
       navigation.navigate(routes.CHAT, {
           userId: user.uid,
           firstname,
           lastname,
-          channelId
+          channelId,
+          oppositeId,
+          chatChannel
       })
     }
 
