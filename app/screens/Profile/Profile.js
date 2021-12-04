@@ -16,6 +16,7 @@ import { toastMessages } from '../../utils/toastMessage';
 import { PubnubAction } from '../../state/ducks/pubnub';
 import { isIOS } from '../../utils/globals';
 import { usePubNub } from 'pubnub-react';
+import { useIsFocused } from '@react-navigation/core';
  
 const Profile = ({navigation}) => {
     const [email, setEmail] = useState('');
@@ -28,14 +29,18 @@ const Profile = ({navigation}) => {
     const isConnected = useSelector(state => state.common.isConnected);
     const channels = useSelector(state => state.pubnub.channels);
     const dispatch = useDispatch();
+    const isFocused = useIsFocused();
     const pubnub = usePubNub();
 
-    console.log("channels ",channels);
+    //console.log("channels ",channels);
 
     useEffect(()=>{
-       getUserData();
-       listChannels();
+      getUserData();
     },[])
+
+    useEffect(()=>{
+      listChannels();
+    },[isFocused])
 
     useLayoutEffect(() => {
          navigation.setOptions({

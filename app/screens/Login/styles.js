@@ -10,10 +10,10 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 30, 
-        marginTop: screenHeight/5, 
-        alignSelf: "center", 
+        marginTop: 40,
+        alignSelf: 'center',
         color: color.GREENTHEME,
-        fontWeight: "bold",
+        fontWeight: 'bold',
         letterSpacing: 0.5
     },
     signupRedirect: {

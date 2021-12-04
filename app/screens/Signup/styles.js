@@ -10,7 +10,7 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 30, 
-        marginTop: screenHeight/10, 
+        marginTop: screenHeight/7, 
         alignSelf: "center", 
         color: color.GREENTHEME,
         fontWeight: "bold",

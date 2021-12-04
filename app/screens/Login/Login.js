@@ -4,7 +4,8 @@ import {
    Text,
    StatusBar,
    TouchableOpacity,
-   View
+   View,
+   Image
  } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import firestore from '@react-native-firebase/firestore';
@@ -28,6 +29,7 @@ import { AuthAction } from '../../state/ducks/auth';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { messages, toastMessages } from '../../utils/toastMessage';
 import { images } from '../../assets/appImages';
+import { screenHeight } from '../../utils/globals';
  
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -44,9 +46,7 @@ const Login = () => {
   const isConnected = useSelector(state => state.common.isConnected);
 
   useEffect(()=> {
-      GoogleSignin.configure({
-        webClientId: "938141476907-bhp4fk9dp36gsiuqaa4qodpnskjkamv3.apps.googleusercontent.com"
-      });
+      GoogleSignin.configure();
   },[])
 
   const onChangeEmail = (text) => {
@@ -279,6 +279,8 @@ const Login = () => {
         style={{flex: 1, backgroundColor: color.WHITE}}
       >
       <SafeAreaView style={styles.container}>
+        {/* <Text style={styles.title}>Chat App</Text> */}
+        <Image source={images.logo} style={{height: 100, width: 100, alignSelf: "center", marginTop: 60}}/>
         <Text style={styles.title}>Log In</Text>
         <TextInputField 
           placeholder={'Email Id*'}

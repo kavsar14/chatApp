@@ -4,15 +4,16 @@ import { color } from '../../utils/color';
 
 const styles = StyleSheet.create({
     container: {
-        marginHorizontal: 5,
+        marginHorizontal: 0,
         alignItems: 'center',
         flexDirection: "row",
         backgroundColor: color.WHITE,
-        borderRadius: 5,
-        marginVertical: 3,
-        padding: 10,
-        elevation: 5,
-        justifyContent: 'space-evenly'
+        borderRadius: 0,
+        marginVertical: 0.5,
+        padding: 8,
+        justifyContent: 'space-evenly',
+        borderBottomWidth: 1,
+        borderBottomColor: color.LIGHTGREY
     },
     name: {
         fontSize: 20,  
@@ -52,7 +53,7 @@ const styles = StyleSheet.create({
     },
     time: {
         fontSize: 16,
-        fontWeight: '200',
+        fontWeight: '500',
         color: color.GREENTHEME
     },
     count: {

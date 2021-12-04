@@ -4,6 +4,7 @@ import { usePubNub } from "pubnub-react";
 import { useDispatch, useSelector } from 'react-redux';
 import _ from 'lodash';
 import firestore from '@react-native-firebase/firestore';
+import { useIsFocused } from '@react-navigation/core';
 
 import { CommonAction } from '../../state/ducks/common';
 import setHeaderLeft from '../../utils/setHeaderLeft';
@@ -17,6 +18,7 @@ import { getFilteredChannelDocId } from '../../pubnub/services';
 const Chat = ({route, navigation}) => {
     const pubnub = usePubNub();
     const dispatch = useDispatch();
+    const isFocused = useIsFocused();
     const user = useSelector(state=>state.auth.user);
     const deviceToken = useSelector(state=>state.auth.deviceToken);
     const userDetails = useSelector(state=>state.auth.userDetails);
@@ -36,6 +38,12 @@ const Chat = ({route, navigation}) => {
        getUserData();
        addChannels();
     }, [])
+
+    useEffect(()=>{
+        if(!isFocused){
+            setMemberships();
+        }
+    },[isFocused])
 
     useLayoutEffect(() => {
         navigation.setOptions({
@@ -152,8 +160,6 @@ const Chat = ({route, navigation}) => {
         getAllMesssageHistory();  
      }
 
-     console.log("doc id ", channelDocId);
-
     const getEnvironment = () => {
         const environment = "development"; // production
         //const environment = "production"; // development
@@ -230,6 +236,7 @@ const Chat = ({route, navigation}) => {
             console.log("message plis ",message);
             console.log("Publish ===>", status, response)
             updateChatChannelLastMessage(message);
+           // setMemberships();
         });
     };
 
@@ -246,11 +253,40 @@ const Chat = ({route, navigation}) => {
         });
     }
 
+    const setMemberships = () => {
+        console.log("calling set membership");
+        pubnub.objects.setMemberships({
+            uuid: userDetails.uid,
+            channels: [{
+                id: channelId,
+                custom: {
+                    lastReadTimetoken: new Date() * 10000,
+                    trialPeriod: false,
+                    isChat: true,
+                },
+                include: {
+                    // To include channel fields in response
+                    channelFields: true
+                }
+            }]
+        }, (status, response) => {
+            console.log("SetMemberships ===>", status, response);
+        })
+    }
+
     return (
         <GiftedChat
             messages={messages}
             onSend={messages => onSend(messages)}
             user={loginUser}
+            listViewProps={{
+                initialNumToRender: 15
+            }}
+            // //infiniteScroll={true}
+            // onLoadEarlier={()=>{
+            //     console.log("fun called earlier");
+            // }}
+            // loadEarlier={true}
        />
     );
  };

@@ -40,7 +40,7 @@ const ChatView = (props) => {
               message ?
               <Text numberOfLines={1} style={styles.message}>
                 {message}
-              </Text> : <View style={{width: '80%'}}/>
+              </Text> : <View style={{width: '80%', height: 18}}/>
             }
             {
               count != 0 && 
