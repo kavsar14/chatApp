@@ -12,3 +12,10 @@ export const setChannels = (data) => {
         payload: data
     }
 }
+
+export const setBadgeCount = (data) => {
+    return {
+        type: types.SET_BADGE_COUNT,
+        payload: data
+    }
+}

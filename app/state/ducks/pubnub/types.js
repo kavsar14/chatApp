@@ -1,2 +1,3 @@
 export const SET_CHANNELS = 'SET_CHANNELS';
 export const REMOVE_CHANNELS = 'REMOVE_CHANNELS';
+export const SET_BADGE_COUNT = 'SET_BADGE_COUNT';

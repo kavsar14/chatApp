@@ -1,22 +1,30 @@
 import React, { useEffect, useLayoutEffect, useState } from 'react';
 import {
+   Alert,
    SafeAreaView,
-   StatusBar
+   StatusBar,
+   Text,
+   View
  } from 'react-native';
 import auth from '@react-native-firebase/auth';
 import { useDispatch, useSelector } from 'react-redux';
+import { usePubNub } from 'pubnub-react';
+import { useIsFocused } from '@react-navigation/core';
 
 import CommonButton from '../../components/CommonButton/CommonButton';
-import { CommonAction } from '../../state/ducks/common';
 import CommonDataView from '../../components/CommonDataView/CommonDataView';
-import { AuthAction } from '../../state/ducks/auth';
 import HeaderTitle from '../../components/HeaderTitle';
+
+import { CommonAction } from '../../state/ducks/common';
+import { AuthAction } from '../../state/ducks/auth';
 import { color } from '../../utils/color';
 import { toastMessages } from '../../utils/toastMessage';
 import { PubnubAction } from '../../state/ducks/pubnub';
-import { isIOS } from '../../utils/globals';
-import { usePubNub } from 'pubnub-react';
-import { useIsFocused } from '@react-navigation/core';
+import { getUpperCase, isIOS } from '../../utils/globals';
+import styles from './styles'
+import { images } from '../../assets/appImages';
+import setHeaderLeft from '../../utils/setHeaderLeft';
+import HeaderRight from '../../components/HeaderRight';
  
 const Profile = ({navigation}) => {
     const [email, setEmail] = useState('');
@@ -32,7 +40,7 @@ const Profile = ({navigation}) => {
     const isFocused = useIsFocused();
     const pubnub = usePubNub();
 
-    //console.log("channels ",channels);
+    console.log("isConnected ", isConnected);
 
     useEffect(()=>{
       getUserData();
@@ -44,11 +52,14 @@ const Profile = ({navigation}) => {
 
     useLayoutEffect(() => {
          navigation.setOptions({
-            headerTitle: () => <HeaderTitle title={'Profile'} />
+            headerTitle: () => <HeaderTitle title={'Profile'} />,
+            headerRight: () => <HeaderRight iconUrl={images.logout} onPress={()=>{
+               confirmLogout()
+            }} />
          });
    }, [navigation])
 
-    const onLogout = () => {
+   const onLogout = () => {
        if(isConnected) {
          dispatch(CommonAction.startLoading());
          auth()
@@ -65,7 +76,7 @@ const Profile = ({navigation}) => {
          const data = { success: false, message: toastMessages.CONNECTION_ERROR };
          dispatch(CommonAction.showToast(data));
       }
-    }
+   }
 
    const removeChannels = () => {
       const gateway = isIOS() ? 'apns2' : 'gcm';
@@ -111,27 +122,53 @@ const Profile = ({navigation}) => {
       setLastname(userDetails.lastname);
    }
 
+   const confirmLogout = () => {
+      Alert.alert(
+         // "Discard draft?",
+         'Logout Confirmation',
+         'Are you sure you want to logout ?',
+         [
+             {
+                 // text: "Keep",
+                 text: 'Yes',
+                 onPress: () => onLogout()
+             },
+             {
+                 // text: "Discard",
+                 text: 'Cancel',
+                 onPress: () => {
+                      
+                 },
+             },
+         ],
+         { cancelable: false },
+     );
+   }
+
     return (
       <>
         <StatusBar barStyle="default" backgroundColor={color.GREENTHEME} />
         <SafeAreaView style={{flex: 1, backgroundColor: '#fff'}}>
+          <View style={styles.noImage}>
+               <Text style={{ color: color.GREENTHEME, fontSize: 50 }}>
+                  {`${getUpperCase(firstname.substring(0, 1))}${getUpperCase(lastname.substring(0, 1))}`}
+               </Text>
+          </View>
           <CommonDataView 
-             label={'Firstname'}
+             label={'First Name'}
              value={firstname}
+             icon={images.account}
           />
           <CommonDataView 
-             label={'Lastname'}
+             label={'Last Name'}
              value={lastname}
+             icon={images.account}
           />
           <CommonDataView 
              label={'Email'}
              value={email}
+             icon={images.email}
           />
-          <CommonButton
-              buttonStyle={{marginTop: 56}}
-              buttonText={'LOGOUT'}
-              onPressButton={()=>onLogout()}
-           />
         </SafeAreaView>
       </>
     );

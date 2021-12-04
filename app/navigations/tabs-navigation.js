@@ -11,6 +11,7 @@ import { color } from '../utils/color';
 import { routes } from '../utils/route';
 import { Image } from 'react-native';
 import { images } from '../assets/appImages';
+import { useSelector } from 'react-redux';
 
 const Tabs = createBottomTabNavigator();
 
@@ -47,6 +48,9 @@ const ChatStack = ({ navigation, route }) => {
 }
 
 const TabNavigator = () => {
+  const badgeCount = useSelector(state => state.pubnub.badgeCount);
+  console.log("badgeCount tab",badgeCount);
+
   return (
     <Tabs.Navigator screenOptions={{
         headerTitleAlign: "center",
@@ -69,8 +73,10 @@ const TabNavigator = () => {
           headerShown: false,
           title: 'Home',
           tabBarIcon: ({color}) => (
-            <Image source={images.chat} style={{ height: 30, width: 30, tintColor: color}} />
-          )
+              <Image source={images.chat} style={{ height: 30, width: 30, tintColor: color}} />
+           ),
+          tabBarBadge: badgeCount,
+          tabBarBadgeStyle: {fontSize: 8, backgroundColor: color.GREENTHEME},
         }}/>
         <Tabs.Screen name={routes.PROFILE} component={Profile} options={{
           tabBarIcon: ({color}) => (

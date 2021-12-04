@@ -22,6 +22,7 @@ import { toastMessages } from '../../utils/toastMessage';
 import { AuthAction } from '../../state/ducks/auth';
 import { getChannelLastMessage, getFilteredChannelId } from '../../pubnub/services';
 import { getDateFilteredArray, getDateInFormat, isIOS } from '../../utils/globals';
+import { PubnubAction } from '../../state/ducks/pubnub';
  
 const Home = ({navigation}) => {
   const [userData, setUserData] = useState([]);
@@ -29,6 +30,7 @@ const Home = ({navigation}) => {
   const [chatChannel, setChatchannel] = useState([]);
   const [messageMembershipData, setMessageMembershipData] = useState([]);
   const [isReady, setIsReady] = useState(false);
+  const [isSetChatChannel, setIsSetChatChannel] = useState(false);
   const user = useSelector(state => state.auth.user);
   const deviceToken = useSelector(state=>state.auth.deviceToken);
   const dispatch = useDispatch();
@@ -49,8 +51,7 @@ const Home = ({navigation}) => {
 
   useEffect(() => {
       if (isRefresh) {
-      //getChatChannel();
-          // getUsersData();
+        getUsersData();
       }
   }, [isRefresh]);
 
@@ -62,19 +63,18 @@ const Home = ({navigation}) => {
 
   useEffect(()=>{
     if(isReady) {
-      // setTimeout(()=>{
         setUnreadCount();
-        setIsReady(false);
-      // },2000)
     }
   },[isReady])
 
   const getUsersData = () => {
+    console.log("calling get users data");
     dispatch(CommonAction.startLoading());
     firestore()
       .collection('users')
       .get()
       .then(querySnapshot => {
+          setIsRefresh(false);
           let data = [];
           let registerchannels = [];
           querySnapshot.forEach(documentSnapshot => {
@@ -83,8 +83,6 @@ const Home = ({navigation}) => {
                 let lastMessage = getChannelLastMessage(documentSnapshot.data().uid, user.uid, chatChannel);
                 let message = lastMessage?.text;
                 let date = lastMessage?.date ? lastMessage?.date?.toDate() : '';
-
-                console.log("dates sorting ",date);
 
                 if(message) {
                   registerchannels.push(channelId);
@@ -109,6 +107,8 @@ const Home = ({navigation}) => {
           addDeviceChannels(registerchannels);
           setIsReady(true);
           dispatch(CommonAction.stopLoading());
+      }).catch(()=>{
+        setIsRefresh(false);
       });
    }
 
@@ -150,6 +150,7 @@ const Home = ({navigation}) => {
               })
             });
             setChatchannel(tempdata); 
+            setIsSetChatChannel(true);
       });
    }
    
@@ -223,7 +224,7 @@ const Home = ({navigation}) => {
             // environment: this.getEnvironment(),   // required for APNs2 development
             // topic: this.getBundleId(), // required for APNs2
         }, (status, response) => {
-            console.log("AddChannels ===>", status, response);
+            //console.log("AddChannels ===>", status, response);
         });
     }
 
@@ -245,16 +246,17 @@ const Home = ({navigation}) => {
     }
 
     const getUnreadCounts = (channels, timeTokens) => {
+      console.log("calling get unread count");
       pubnub.messageCounts({
         channels: channels,
         channelTimetokens: timeTokens,
       }, (status, results) => {
         // handle status, response
-        console.log("finally status ",status);
-        console.log("finally results ",results);
         let updateUserData = [];
+        let badgeCount = 0;
         userData.forEach(item=>{
            if(results.channels.hasOwnProperty(item.channelId)){
+             badgeCount += results.channels[item.channelId];
               updateUserData = [
                  ...updateUserData,
                  {
@@ -270,7 +272,8 @@ const Home = ({navigation}) => {
            }
         })
 
-        console.log("new userData ",updateUserData);
+        console.log("update user data ",updateUserData);
+        dispatch(PubnubAction.setBadgeCount(badgeCount));
         setUserData(updateUserData);
       });
     }
@@ -282,6 +285,7 @@ const Home = ({navigation}) => {
     )
 
     const setUnreadCount = () => {
+      console.log("calling set unread count ", userData);
       pubnub.objects.getMemberships({
         uuid: user.uid,
         include: {
@@ -299,7 +303,8 @@ const Home = ({navigation}) => {
                 channels.push(item.channel.id);
               }
             })
-            console.log("timetokens ", timeTokens);
+            setIsReady(false);
+  
             if(timeTokens.length > 0) {
               getUnreadCounts(channels, timeTokens);
             }

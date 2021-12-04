@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  Image,
   Text, View
 } from 'react-native';
 import styles from './styles';
@@ -7,7 +8,8 @@ import styles from './styles';
 const CommonDataView = (props) => {
   const {
     label,
-    value
+    value,
+    icon
   } = props;
 
   return (
@@ -15,9 +17,12 @@ const CommonDataView = (props) => {
          <Text style={styles.title}>
              {label}
          </Text>
-         <Text>
-             {value}
-         </Text>
+         <View style={styles.valueContainer}>
+            <Text style={styles.value}>
+                {value}
+            </Text>
+            <Image source={icon} style={styles.image}/>
+         </View>
      </View>
   );
 };

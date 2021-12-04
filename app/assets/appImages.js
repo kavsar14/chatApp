@@ -13,4 +13,6 @@ export const images = {
     menu: require('./menu.png'),
     chat: require('./chat.png'),
     profile: require('./profile.png'),
+    logout: require('./logout.png'),
+    account: require('./account.png')
 };

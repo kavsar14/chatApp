@@ -109,7 +109,7 @@ const Login = () => {
         dispatch(AuthAction.setUserToken(idToken));
       });
 
-      const data = { success: true, message: 'You are succussfully login'}
+      const data = { success: true, message: 'You are succussfully logged in'}
       dispatch(CommonAction.showToast(data));
       dispatch(CommonAction.stopLoading());
   }
