@@ -75,7 +75,7 @@ const TabNavigator = () => {
           tabBarIcon: ({color}) => (
               <Image source={images.chat} style={{ height: 30, width: 30, tintColor: color}} />
            ),
-          tabBarBadge: badgeCount,
+          tabBarBadge: badgeCount > 0 ? badgeCount : null,
           tabBarBadgeStyle: {fontSize: 8, backgroundColor: color.GREENTHEME},
         }}/>
         <Tabs.Screen name={routes.PROFILE} component={Profile} options={{

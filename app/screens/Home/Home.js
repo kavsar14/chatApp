@@ -39,7 +39,7 @@ const Home = ({navigation}) => {
 
   useEffect(()=>{
     if(isFocused) {
-        getChatChannel();
+      getChatChannel();
     }
   },[isFocused])
 
@@ -50,25 +50,25 @@ const Home = ({navigation}) => {
   }, [navigation])
 
   useEffect(() => {
-      if (isRefresh) {
-        getUsersData();
-      }
+    if (isRefresh) {
+      getUsersData();
+    }
   }, [isRefresh]);
 
   useEffect(() =>{
-    if(chatChannel) {
+    if(isSetChatChannel) {
       getUsersData(); 
+      setIsSetChatChannel(false);
     }
-  },[chatChannel])
+  },[isSetChatChannel])
 
   useEffect(()=>{
     if(isReady) {
-        setUnreadCount();
+      setUnreadCount();
     }
   },[isReady])
 
   const getUsersData = () => {
-    console.log("calling get users data");
     dispatch(CommonAction.startLoading());
     firestore()
       .collection('users')
@@ -228,25 +228,7 @@ const Home = ({navigation}) => {
         });
     }
 
-    const getMemberShips = () => {
-      pubnub.objects.getMemberships({
-        uuid: user.uid,
-        include: {
-            customFields: true,
-            channelFields: true,
-            customChannelFields: true,
-        }
-    }, (status, response) => {
-        //console.log("GetMemberships ===>", status, response);
-        response.data.forEach(item=>{
-           //console.log("membership chanel ",item.channel);
-        })
-        setMessageMembershipData(response.data);
-    })
-    }
-
     const getUnreadCounts = (channels, timeTokens) => {
-      console.log("calling get unread count");
       pubnub.messageCounts({
         channels: channels,
         channelTimetokens: timeTokens,
@@ -272,7 +254,6 @@ const Home = ({navigation}) => {
            }
         })
 
-        console.log("update user data ",updateUserData);
         dispatch(PubnubAction.setBadgeCount(badgeCount));
         setUserData(updateUserData);
       });
@@ -285,7 +266,6 @@ const Home = ({navigation}) => {
     )
 
     const setUnreadCount = () => {
-      console.log("calling set unread count ", userData);
       pubnub.objects.getMemberships({
         uuid: user.uid,
         include: {
@@ -310,8 +290,6 @@ const Home = ({navigation}) => {
             }
         })
     }
-
-   // console.log("message mebership heer", messageMembershipData);
 
     return (
       <>
